@@ -5,49 +5,102 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BHAU Admin Panel</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#080b12;color:#eef2ff}.wrap{max-width:760px;margin:auto;padding:20px}.head{padding:20px;border-radius:22px;background:linear-gradient(135deg,#17102b,#0d1626);border:1px solid #302354;margin-bottom:16px}.card{background:#101725;border:1px solid #273149;border-radius:20px;padding:18px;margin:14px 0}h1,h2{margin:0 0 10px}h2{font-size:17px}.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #20293a;gap:12px}.row:last-child{border:0}.switch{width:52px;height:30px;position:relative;display:inline-block}.switch input{display:none}.slider{position:absolute;inset:0;background:#3b4252;border-radius:99px;cursor:pointer}.slider:before{content:'';position:absolute;width:22px;height:22px;left:4px;top:4px;background:white;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:#16a34a}.switch input:checked+.slider:before{transform:translateX(22px)}.modes{display:flex;gap:10px}.mode{flex:1;padding:14px;border:1px solid #34405a;border-radius:14px;cursor:pointer;text-align:center}.mode.active{border-color:#7c3aed;background:#241341}input[type=number],input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;margin-top:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{width:100%;padding:15px;border:0;border-radius:14px;background:#7c3aed;color:#fff;font-weight:800;font-size:15px;cursor:pointer}.btn:disabled{opacity:.55}.btn.secondary{background:#263146}.status{font-size:13px;color:#94a3b8;margin-top:10px}.status.ok{color:#34d399}.status.error{color:#fb7185}.hidden{display:none}@media(max-width:500px){.grid{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#080b12;color:#eef2ff}.wrap{max-width:760px;margin:auto;padding:20px}.head{padding:20px;border-radius:22px;background:linear-gradient(135deg,#17102b,#0d1626);border:1px solid #302354;margin-bottom:16px}.card{background:#101725;border:1px solid #273149;border-radius:20px;padding:18px;margin:14px 0}h1,h2{margin:0 0 10px}h2{font-size:17px}.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #20293a;gap:12px}.row:last-child{border:0}.switch{width:52px;height:30px;position:relative;display:inline-block;flex:0 0 52px}.switch input{position:absolute;opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#3b4252;border-radius:99px;cursor:pointer;touch-action:manipulation}.slider:before{content:'';position:absolute;width:22px;height:22px;left:4px;top:4px;background:white;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:#16a34a}.switch input:checked+.slider:before{transform:translateX(22px)}.modes{display:flex;gap:10px}.mode{flex:1;padding:14px;border:1px solid #34405a;border-radius:14px;cursor:pointer;text-align:center;user-select:none;touch-action:manipulation}.mode.active{border-color:#7c3aed;background:#241341}input[type=number],input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;margin-top:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{width:100%;padding:15px;border:0;border-radius:14px;background:#7c3aed;color:#fff;font-weight:800;font-size:15px;cursor:pointer;touch-action:manipulation}.btn:disabled{opacity:.55}.btn.secondary{background:#263146}.status{font-size:13px;color:#94a3b8;margin-top:10px;word-break:break-word}.status.ok{color:#34d399}.status.error{color:#fb7185}.hidden{display:none}@media(max-width:500px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
-<body><div class="wrap">
-<div class="head"><h1>⚙️ BHAU Admin Panel</h1><div>Firebase live settings control</div><div id="status" class="status">Connecting…</div></div>
-<div class="card"><h2>📋 Menu Control</h2><div id="menus"></div></div>
-<div class="card"><h2>💸 Withdrawal Settings</h2>
-<div class="modes"><div class="mode" data-mode="fixed">Fixed Amount</div><div class="mode" data-mode="any">Any Amount</div></div>
-<div id="fixedBox"><label>Allowed amounts (comma separated)</label><input id="fixedAmounts" type="text" value="200,300,500,1000,2000,5000"></div>
-<div id="anyBox" class="hidden"><div class="grid"><div><label>Minimum</label><input id="minimum" type="number" min="1" value="1"></div><div><label>Maximum</label><input id="maximum" type="number" min="1" value="999999"></div></div></div>
+<body>
+<div class="wrap">
+  <div class="head"><h1>⚙️ BHAU Admin Panel</h1><div>Firebase live settings control</div><div id="status" class="status">Loading control panel…</div></div>
+  <div class="card"><h2>📋 Menu Control</h2><div id="menus"></div></div>
+  <div class="card"><h2>💸 Withdrawal Settings</h2>
+    <div class="modes"><div class="mode" data-mode="fixed">Fixed Amount</div><div class="mode" data-mode="any">Any Amount</div></div>
+    <div id="fixedBox"><label>Allowed amounts (comma separated)</label><input id="fixedAmounts" type="text" value="200,300,500,1000,2000,5000"></div>
+    <div id="anyBox" class="hidden"><div class="grid"><div><label>Minimum</label><input id="minimum" type="number" min="1" value="1"></div><div><label>Maximum</label><input id="maximum" type="number" min="1" value="999999"></div></div></div>
+  </div>
+  <div class="card"><h2>📢 Announcement</h2>
+    <label>Notification message</label>
+    <textarea id="announcementText" placeholder="Type announcement for all users…" style="width:100%;min-height:100px;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;margin-top:7px;resize:vertical"></textarea>
+    <button id="sendAnnouncementBtn" class="btn" type="button" style="margin-top:10px">📢 SEND ANNOUNCEMENT</button>
+    <div id="announcementStatus" class="status"></div>
+  </div>
+  <button id="saveBtn" class="btn" type="button">💾 SAVE SETTINGS</button>
+  <button id="reloadBtn" class="btn secondary" style="margin-top:10px" type="button">↻ Reload from Firebase</button>
 </div>
-<button id="saveBtn" class="btn">💾 SAVE SETTINGS</button>
-<button id="reloadBtn" class="btn secondary" style="margin-top:10px">↻ Reload from Firebase</button>
-</div>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-database-compat.js"></script>
+
+<!-- Non-module Firebase scripts: better support for locally opened HTML files -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <script>
 (function(){
-  const firebaseConfig={apiKey:"AIzaSyDBwX7FuAVGgPQQGVGOmi7WchTDAK8MsxA",authDomain:"bhau-c7586.firebaseapp.com",databaseURL:"https://bhau-c7586-default-rtdb.firebaseio.com",projectId:"bhau-c7586",storageBucket:"bhau-c7586.firebasestorage.app",messagingSenderId:"1097089579562",appId:"1:1097089579562:web:df5de026482a38540fa153"};
+  'use strict';
   const $=id=>document.getElementById(id);
   const status=$('status');
+  const menuLabels={games:'Games',limbo:'Limbo',deposit:'Deposit',withdraw:'Withdrawal',addcard:'Add Card',autoclaim:'Auto Claim',balance:'Balance',transactions:'Transactions',refer:'Referral',smartcalc:'Smart Calculator'};
+  const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
+  let state=JSON.parse(JSON.stringify(defaults));
+  let db=null, settingsRef=null, announcementRef=null;
+
+  const menus=$('menus');
+  for(const [key,label] of Object.entries(menuLabels)) menus.insertAdjacentHTML('beforeend',`<div class="row"><span>${label}</span><label class="switch"><input type="checkbox" data-menu="${key}"><span class="slider"></span></label></div>`);
+
   function setStatus(text,type=''){status.textContent=text;status.className='status '+type;}
-  window.addEventListener('error',e=>{ console.error(e.error||e.message); setStatus('● Script error: '+(e.message||'Unknown error'),'error'); });
-  if(!window.firebase){ setStatus('● Firebase SDK failed to load','error'); return; }
+  function merge(raw){const d=raw&&typeof raw==='object'?raw:{};return {menus:{...defaults.menus,...(d.menus||{})},withdrawal:{...defaults.withdrawal,...(d.withdrawal||{})}}}
+  function render(){
+    document.querySelectorAll('[data-menu]').forEach(el=>el.checked=state.menus[el.dataset.menu]!==false);
+    document.querySelectorAll('.mode').forEach(el=>el.classList.toggle('active',el.dataset.mode===state.withdrawal.mode));
+    $('fixedAmounts').value=(Array.isArray(state.withdrawal.fixedAmounts)?state.withdrawal.fixedAmounts:defaults.withdrawal.fixedAmounts).join(',');
+    $('minimum').value=state.withdrawal.minimum;$('maximum').value=state.withdrawal.maximum;
+    $('fixedBox').classList.toggle('hidden',state.withdrawal.mode!=='fixed');
+    $('anyBox').classList.toggle('hidden',state.withdrawal.mode!=='any');
+  }
+  function collect(){
+    const amounts=$('fixedAmounts').value.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x)&&x>0);
+    const unique=[...new Set(amounts)];
+    if(state.withdrawal.mode==='fixed'&&!unique.length) throw new Error('Enter at least one valid fixed amount.');
+    const min=Number($('minimum').value),max=Number($('maximum').value);
+    if(!Number.isFinite(min)||!Number.isFinite(max)||min<1||max<min) throw new Error('Minimum/maximum values are invalid.');
+    const menuState={};document.querySelectorAll('[data-menu]').forEach(el=>menuState[el.dataset.menu]=el.checked);
+    return {menus:menuState,withdrawal:{mode:state.withdrawal.mode,fixedAmounts:unique.length?unique:defaults.withdrawal.fixedAmounts,minimum:min,maximum:max}};
+  }
+
+  document.querySelectorAll('.mode').forEach(el=>el.addEventListener('click',function(){state.withdrawal.mode=this.dataset.mode;render();}));
+
+  $('saveBtn').addEventListener('click',function(){
+    try{
+      state=collect();render();
+      if(!settingsRef){setStatus('Settings changed locally. Firebase is not connected yet.','error');return;}
+      $('saveBtn').disabled=true;setStatus('Saving settings…');
+      settingsRef.set(state).then(()=>setStatus('● Connected — settings saved','ok')).catch(e=>{console.error(e);setStatus('● Save failed: '+(e.message||e),'error')}).finally(()=>$('saveBtn').disabled=false);
+    }catch(e){setStatus('● '+(e.message||e),'error');}
+  });
+
+  $('sendAnnouncementBtn').addEventListener('click',function(){
+    const text=$('announcementText').value.trim();
+    const out=$('announcementStatus');
+    if(!text){out.textContent='Please type an announcement first.';out.className='status error';return;}
+    if(!announcementRef){out.textContent='Firebase is not connected.';out.className='status error';return;}
+    $('sendAnnouncementBtn').disabled=true;
+    const payload={text:text,id:Date.now(),createdAt:Date.now()};
+    announcementRef.set(payload).then(()=>{
+      out.textContent='📢 Announcement sent to users.';out.className='status ok';$('announcementText').value='';
+    }).catch(e=>{out.textContent='Send failed: '+(e.message||e);out.className='status error';}).finally(()=>$('sendAnnouncementBtn').disabled=false);
+  });
+
+  $('reloadBtn').addEventListener('click',function(){
+    if(!settingsRef){setStatus('Firebase is not connected. Check internet and database rules.','error');return;}
+    setStatus('Reloading…');
+    settingsRef.once('value').then(s=>{state=merge(s.val());render();setStatus('● Connected — settings loaded','ok')}).catch(e=>setStatus('● Reload failed: '+(e.message||e),'error'));
+  });
+
+  render();
   try{
-    firebase.initializeApp(firebaseConfig);
-    const db=firebase.database();
-    const settingsRef=db.ref('dashboardSettings');
-    const menuLabels={games:'Games',limbo:'Limbo',deposit:'Deposit',withdraw:'Withdrawal',addcard:'Add Card',autoclaim:'Auto Claim',balance:'Balance',transactions:'Transactions',refer:'Referral',smartcalc:'Smart Calculator'};
-    const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
-    let state=JSON.parse(JSON.stringify(defaults));
-    const menus=$('menus');
-    for(const [key,label] of Object.entries(menuLabels)) menus.insertAdjacentHTML('beforeend',`<div class="row"><span>${label}</span><label class="switch"><input type="checkbox" data-menu="${key}"><span class="slider"></span></label></div>`);
-    function merge(raw){const d=raw&&typeof raw==='object'?raw:{};return {menus:{...defaults.menus,...(d.menus||{})},withdrawal:{...defaults.withdrawal,...(d.withdrawal||{})}}}
-    function render(){document.querySelectorAll('[data-menu]').forEach(el=>el.checked=state.menus[el.dataset.menu]!==false);document.querySelectorAll('.mode').forEach(el=>el.classList.toggle('active',el.dataset.mode===state.withdrawal.mode));$('fixedAmounts').value=(Array.isArray(state.withdrawal.fixedAmounts)?state.withdrawal.fixedAmounts:defaults.withdrawal.fixedAmounts).join(',');$('minimum').value=state.withdrawal.minimum;$('maximum').value=state.withdrawal.maximum;$('fixedBox').classList.toggle('hidden',state.withdrawal.mode!=='fixed');$('anyBox').classList.toggle('hidden',state.withdrawal.mode!=='any')}
-    document.querySelectorAll('.mode').forEach(el=>el.addEventListener('click',()=>{state.withdrawal.mode=el.dataset.mode;render()}));
-    function collect(){const amounts=$('fixedAmounts').value.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x)&&x>0);const unique=[...new Set(amounts)];if(!unique.length)throw new Error('Enter at least one valid fixed amount.');const min=Number($('minimum').value),max=Number($('maximum').value);if(!Number.isFinite(min)||!Number.isFinite(max)||min<1||max<min)throw new Error('Minimum/maximum values are invalid.');const menuState={};document.querySelectorAll('[data-menu]').forEach(el=>menuState[el.dataset.menu]=el.checked);return {menus:menuState,withdrawal:{mode:state.withdrawal.mode,fixedAmounts:unique,minimum:min,maximum:max}}}
-    $('saveBtn').addEventListener('click',async()=>{try{$('saveBtn').disabled=true;setStatus('Saving settings…');state=collect();await settingsRef.set(state);setStatus('● Connected — settings saved','ok')}catch(e){console.error(e);setStatus('● Save failed: '+(e.message||e),'error')}finally{$('saveBtn').disabled=false}});
-    $('reloadBtn').addEventListener('click',async()=>{try{setStatus('Reloading…');const snap=await settingsRef.once('value');state=merge(snap.val());render();setStatus('● Connected — settings loaded','ok')}catch(e){console.error(e);setStatus('● Reload failed: '+(e.message||e),'error')}});
-    settingsRef.on('value',snap=>{state=merge(snap.val());render();setStatus(snap.exists()?'● Connected — live sync active':'● Connected — no saved settings yet','ok')},err=>{console.error(err);setStatus('● Firebase error: '+(err.message||err),'error')});
-    render();
-    setTimeout(()=>{if(status.textContent.includes('Connecting'))setStatus('● Waiting for Firebase response…');},5000);
-  }catch(e){console.error(e);setStatus('● Setup failed: '+(e.message||e),'error');}
+    if(!window.firebase) throw new Error('Firebase scripts could not load. Check internet connection.');
+    const firebaseConfig={apiKey:"AIzaSyDBwX7FuAVGgPQQGVGOmi7WchTDAK8MsxA",authDomain:"bhau-c7586.firebaseapp.com",databaseURL:"https://bhau-c7586-default-rtdb.firebaseio.com",projectId:"bhau-c7586",storageBucket:"bhau-c7586.firebasestorage.app",messagingSenderId:"1097089579562",appId:"1:1097089579562:web:df5de026482a38540fa153"};
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db=firebase.database();settingsRef=db.ref('dashboardSettings');announcementRef=db.ref('announcement');
+    settingsRef.on('value',snap=>{state=merge(snap.val());render();setStatus(snap.exists()?'● Connected — live sync active':'● Connected — ready to save first settings','ok');},err=>{console.error(err);setStatus('● Firebase error: '+(err.message||err),'error');});
+  }catch(e){console.error(e);setStatus('● Firebase load failed: '+(e.message||e),'error');}
 })();
 </script>
-</body></html>
+</body>
+</html>
