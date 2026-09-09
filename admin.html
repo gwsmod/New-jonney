@@ -19,31 +19,35 @@
 <button id="saveBtn" class="btn">💾 SAVE SETTINGS</button>
 <button id="reloadBtn" class="btn secondary" style="margin-top:10px">↻ Reload from Firebase</button>
 </div>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
-
-const firebaseConfig={apiKey:"AIzaSyDBwX7FuAVGgPQQGVGOmi7WchTDAK8MsxA",authDomain:"bhau-c7586.firebaseapp.com",databaseURL:"https://bhau-c7586-default-rtdb.firebaseio.com",projectId:"bhau-c7586",storageBucket:"bhau-c7586.firebasestorage.app",messagingSenderId:"1097089579562",appId:"1:1097089579562:web:df5de026482a38540fa153"};
-const app=initializeApp(firebaseConfig);
-const db=getDatabase(app);
-const settingsRef=ref(db,'dashboardSettings');
-const $=id=>document.getElementById(id);
-const status=$('status');
-const menuLabels={games:'Games',limbo:'Limbo',deposit:'Deposit',withdraw:'Withdrawal',addcard:'Add Card',autoclaim:'Auto Claim',balance:'Balance',transactions:'Transactions',refer:'Referral',smartcalc:'Smart Calculator'};
-const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
-let state=JSON.parse(JSON.stringify(defaults));
-
-const menus=$('menus');
-for(const [key,label] of Object.entries(menuLabels)) menus.insertAdjacentHTML('beforeend',`<div class="row"><span>${label}</span><label class="switch"><input type="checkbox" data-menu="${key}"><span class="slider"></span></label></div>`);
-function setStatus(text,type=''){status.textContent=text;status.className='status '+type;}
-function merge(raw){const d=raw&&typeof raw==='object'?raw:{};return {menus:{...defaults.menus,...(d.menus||{})},withdrawal:{...defaults.withdrawal,...(d.withdrawal||{})}}}
-function render(){document.querySelectorAll('[data-menu]').forEach(el=>el.checked=state.menus[el.dataset.menu]!==false);document.querySelectorAll('.mode').forEach(el=>el.classList.toggle('active',el.dataset.mode===state.withdrawal.mode));$('fixedAmounts').value=(Array.isArray(state.withdrawal.fixedAmounts)?state.withdrawal.fixedAmounts:defaults.withdrawal.fixedAmounts).join(',');$('minimum').value=state.withdrawal.minimum;$('maximum').value=state.withdrawal.maximum;$('fixedBox').classList.toggle('hidden',state.withdrawal.mode!=='fixed');$('anyBox').classList.toggle('hidden',state.withdrawal.mode!=='any')}
-document.querySelectorAll('.mode').forEach(el=>el.addEventListener('click',()=>{state.withdrawal.mode=el.dataset.mode;render()}));
-function collect(){const amounts=$('fixedAmounts').value.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x)&&x>0);const unique=[...new Set(amounts)];if(!unique.length) throw new Error('Enter at least one valid fixed amount.');const min=Number($('minimum').value),max=Number($('maximum').value);if(!Number.isFinite(min)||!Number.isFinite(max)||min<1||max<min) throw new Error('Minimum/maximum values are invalid.');const menuState={};document.querySelectorAll('[data-menu]').forEach(el=>menuState[el.dataset.menu]=el.checked);return {menus:menuState,withdrawal:{mode:state.withdrawal.mode,fixedAmounts:unique,minimum:min,maximum:max}}}
-$('saveBtn').addEventListener('click',async()=>{try{$('saveBtn').disabled=true;setStatus('Saving settings…');state=collect();await set(settingsRef,state);setStatus('● Connected — settings saved','ok')}catch(e){console.error(e);setStatus('● Save failed: '+(e?.message||e),'error')}finally{$('saveBtn').disabled=false}});
-$('reloadBtn').addEventListener('click',async()=>{try{setStatus('Reloading…');const snap=await get(settingsRef);state=merge(snap.val());render();setStatus('● Connected — settings loaded','ok')}catch(e){console.error(e);setStatus('● Reload failed: '+(e?.message||e),'error')}});
-
-onValue(settingsRef,snap=>{state=merge(snap.val());render();setStatus(snap.exists()?'● Connected — live sync active':'● Connected — no saved settings yet','ok')},error=>{console.error('Firebase connection error:',error);setStatus('● Firebase error: '+(error?.message||error),'error')});
-render();
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-database-compat.js"></script>
+<script>
+(function(){
+  const firebaseConfig={apiKey:"AIzaSyDBwX7FuAVGgPQQGVGOmi7WchTDAK8MsxA",authDomain:"bhau-c7586.firebaseapp.com",databaseURL:"https://bhau-c7586-default-rtdb.firebaseio.com",projectId:"bhau-c7586",storageBucket:"bhau-c7586.firebasestorage.app",messagingSenderId:"1097089579562",appId:"1:1097089579562:web:df5de026482a38540fa153"};
+  const $=id=>document.getElementById(id);
+  const status=$('status');
+  function setStatus(text,type=''){status.textContent=text;status.className='status '+type;}
+  window.addEventListener('error',e=>{ console.error(e.error||e.message); setStatus('● Script error: '+(e.message||'Unknown error'),'error'); });
+  if(!window.firebase){ setStatus('● Firebase SDK failed to load','error'); return; }
+  try{
+    firebase.initializeApp(firebaseConfig);
+    const db=firebase.database();
+    const settingsRef=db.ref('dashboardSettings');
+    const menuLabels={games:'Games',limbo:'Limbo',deposit:'Deposit',withdraw:'Withdrawal',addcard:'Add Card',autoclaim:'Auto Claim',balance:'Balance',transactions:'Transactions',refer:'Referral',smartcalc:'Smart Calculator'};
+    const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
+    let state=JSON.parse(JSON.stringify(defaults));
+    const menus=$('menus');
+    for(const [key,label] of Object.entries(menuLabels)) menus.insertAdjacentHTML('beforeend',`<div class="row"><span>${label}</span><label class="switch"><input type="checkbox" data-menu="${key}"><span class="slider"></span></label></div>`);
+    function merge(raw){const d=raw&&typeof raw==='object'?raw:{};return {menus:{...defaults.menus,...(d.menus||{})},withdrawal:{...defaults.withdrawal,...(d.withdrawal||{})}}}
+    function render(){document.querySelectorAll('[data-menu]').forEach(el=>el.checked=state.menus[el.dataset.menu]!==false);document.querySelectorAll('.mode').forEach(el=>el.classList.toggle('active',el.dataset.mode===state.withdrawal.mode));$('fixedAmounts').value=(Array.isArray(state.withdrawal.fixedAmounts)?state.withdrawal.fixedAmounts:defaults.withdrawal.fixedAmounts).join(',');$('minimum').value=state.withdrawal.minimum;$('maximum').value=state.withdrawal.maximum;$('fixedBox').classList.toggle('hidden',state.withdrawal.mode!=='fixed');$('anyBox').classList.toggle('hidden',state.withdrawal.mode!=='any')}
+    document.querySelectorAll('.mode').forEach(el=>el.addEventListener('click',()=>{state.withdrawal.mode=el.dataset.mode;render()}));
+    function collect(){const amounts=$('fixedAmounts').value.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x)&&x>0);const unique=[...new Set(amounts)];if(!unique.length)throw new Error('Enter at least one valid fixed amount.');const min=Number($('minimum').value),max=Number($('maximum').value);if(!Number.isFinite(min)||!Number.isFinite(max)||min<1||max<min)throw new Error('Minimum/maximum values are invalid.');const menuState={};document.querySelectorAll('[data-menu]').forEach(el=>menuState[el.dataset.menu]=el.checked);return {menus:menuState,withdrawal:{mode:state.withdrawal.mode,fixedAmounts:unique,minimum:min,maximum:max}}}
+    $('saveBtn').addEventListener('click',async()=>{try{$('saveBtn').disabled=true;setStatus('Saving settings…');state=collect();await settingsRef.set(state);setStatus('● Connected — settings saved','ok')}catch(e){console.error(e);setStatus('● Save failed: '+(e.message||e),'error')}finally{$('saveBtn').disabled=false}});
+    $('reloadBtn').addEventListener('click',async()=>{try{setStatus('Reloading…');const snap=await settingsRef.once('value');state=merge(snap.val());render();setStatus('● Connected — settings loaded','ok')}catch(e){console.error(e);setStatus('● Reload failed: '+(e.message||e),'error')}});
+    settingsRef.on('value',snap=>{state=merge(snap.val());render();setStatus(snap.exists()?'● Connected — live sync active':'● Connected — no saved settings yet','ok')},err=>{console.error(err);setStatus('● Firebase error: '+(err.message||err),'error')});
+    render();
+    setTimeout(()=>{if(status.textContent.includes('Connecting'))setStatus('● Waiting for Firebase response…');},5000);
+  }catch(e){console.error(e);setStatus('● Setup failed: '+(e.message||e),'error');}
+})();
 </script>
 </body></html>
