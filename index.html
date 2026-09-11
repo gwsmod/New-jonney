@@ -6,6 +6,13 @@
 <title>BHAU Admin Panel</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#080b12;color:#eef2ff}.wrap{max-width:760px;margin:auto;padding:20px}.head{padding:20px;border-radius:22px;background:linear-gradient(135deg,#17102b,#0d1626);border:1px solid #302354;margin-bottom:16px}.card{background:#101725;border:1px solid #273149;border-radius:20px;padding:18px;margin:14px 0}h1,h2{margin:0 0 10px}h2{font-size:17px}.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #20293a;gap:12px}.row:last-child{border:0}.switch{width:52px;height:30px;position:relative;display:inline-block;flex:0 0 52px}.switch input{position:absolute;opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#3b4252;border-radius:99px;cursor:pointer;touch-action:manipulation}.slider:before{content:'';position:absolute;width:22px;height:22px;left:4px;top:4px;background:white;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:#16a34a}.switch input:checked+.slider:before{transform:translateX(22px)}.modes{display:flex;gap:10px}.mode{flex:1;padding:14px;border:1px solid #34405a;border-radius:14px;cursor:pointer;text-align:center;user-select:none;touch-action:manipulation}.mode.active{border-color:#7c3aed;background:#241341}input[type=number],input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;margin-top:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{width:100%;padding:15px;border:0;border-radius:14px;background:#7c3aed;color:#fff;font-weight:800;font-size:15px;cursor:pointer;touch-action:manipulation}.btn:disabled{opacity:.55}.btn.secondary{background:#263146}.status{font-size:13px;color:#94a3b8;margin-top:10px;word-break:break-word}.status.ok{color:#34d399}.status.error{color:#fb7185}.hidden{display:none}@media(max-width:500px){.grid{grid-template-columns:1fr}}
+.bulk{margin-top:12px;padding-top:12px;border-top:1px solid #20293a}
+.bulk textarea{width:100%;min-height:130px;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;resize:vertical}
+.small-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.btn.red{background:#ef4444}.btn.green{background:#16a34a}
+.number-list{margin-top:12px;display:flex;flex-direction:column;gap:7px;max-height:260px;overflow:auto}
+.number-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid #273149;border-radius:12px;background:#080d17;font-size:13px}
+.number-item button{border:0;border-radius:9px;background:#ef4444;color:#fff;padding:7px 10px;font-weight:800;cursor:pointer}
 </style>
 </head>
 <body>
@@ -17,6 +24,40 @@
     <div id="fixedBox"><label>Allowed amounts (comma separated)</label><input id="fixedAmounts" type="text" value="200,300,500,1000,2000,5000"></div>
     <div id="anyBox" class="hidden"><div class="grid"><div><label>Minimum</label><input id="minimum" type="number" min="1" value="1"></div><div><label>Maximum</label><input id="maximum" type="number" min="1" value="999999"></div></div></div>
   </div>
+
+  <!-- ADDED: NUMBER MANAGEMENT -->
+  <div class="card">
+    <h2>📱 Dummy Account Numbers</h2>
+    <label>Add phone number</label>
+    <input id="numberInput" type="text" inputmode="numeric" maxlength="10" placeholder="Enter 10 digit number">
+    <button id="addNumberBtn" class="btn" type="button" style="margin-top:10px">➕ ADD NUMBER</button>
+
+    <div class="bulk">
+      <label>Bulk add numbers (one per line or comma separated)</label>
+      <textarea id="bulkNumbers" placeholder="9876543210
+9123456789
+9012345678"></textarea>
+      <button id="bulkAddBtn" class="btn" type="button" style="margin-top:10px">📥 BULK ADD NUMBERS</button>
+    </div>
+
+    <div id="numberStatus" class="status"></div>
+    <div id="numberList" class="number-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>🎭 Dummy Account Login Control</h2>
+    <div class="row">
+      <span>Show Dummy Account Login button</span>
+      <label class="switch"><input type="checkbox" id="dummyLoginVisible" checked><span class="slider"></span></label>
+    </div>
+    <div class="row">
+      <span>Lock Dummy Account Login</span>
+      <label class="switch"><input type="checkbox" id="dummyLoginLocked"><span class="slider"></span></label>
+    </div>
+    <div class="status">When locked, the button stays visible and users see: “Please contact Sanju for unlock.”</div>
+    <button id="saveDummyControlBtn" class="btn" type="button" style="margin-top:10px">💾 SAVE DUMMY LOGIN CONTROL</button>
+  </div>
+
   <div class="card"><h2>📢 Announcement</h2>
     <label>Notification message</label>
     <textarea id="announcementText" placeholder="Type announcement for all users…" style="width:100%;min-height:100px;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;margin-top:7px;resize:vertical"></textarea>
@@ -27,7 +68,6 @@
   <button id="reloadBtn" class="btn secondary" style="margin-top:10px" type="button">↻ Reload from Firebase</button>
 </div>
 
-<!-- Non-module Firebase scripts: better support for locally opened HTML files -->
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <script>
@@ -38,7 +78,34 @@
   const menuLabels={games:'Games',limbo:'Limbo',deposit:'Deposit',withdraw:'Withdrawal',addcard:'Add Card',autoclaim:'Auto Claim',balance:'Balance',transactions:'Transactions',refer:'Referral',smartcalc:'Smart Calculator'};
   const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
   let state=JSON.parse(JSON.stringify(defaults));
-  let db=null, settingsRef=null, announcementRef=null;
+  let db=null, settingsRef=null, announcementRef=null, numbersRef=null;
+
+  const DUMMY_CONTROL_KEY='dummyLoginControl';
+
+  function loadDummyControl(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(DUMMY_CONTROL_KEY)||'{}');
+      return {visible:raw.visible!==false,locked:raw.locked===true};
+    }catch(e){return {visible:true,locked:false}}
+  }
+  function renderDummyControl(){
+    const c=loadDummyControl();
+    $('dummyLoginVisible').checked=c.visible;
+    $('dummyLoginLocked').checked=c.locked;
+  }
+  function saveDummyControl(){
+    const c={visible:$('dummyLoginVisible').checked,locked:$('dummyLoginLocked').checked};
+    localStorage.setItem(DUMMY_CONTROL_KEY,JSON.stringify(c));
+    const out=$('numberStatus');
+    out.textContent=c.locked
+      ? '🔒 Dummy Account Login locked.'
+      : '🔓 Dummy Account Login unlocked.';
+    out.className='status ok';
+  }
+
+  $('saveDummyControlBtn').addEventListener('click',saveDummyControl);
+  renderDummyControl();
+
 
   const menus=$('menus');
   for(const [key,label] of Object.entries(menuLabels)) menus.insertAdjacentHTML('beforeend',`<div class="row"><span>${label}</span><label class="switch"><input type="checkbox" data-menu="${key}"><span class="slider"></span></label></div>`);
@@ -74,6 +141,94 @@
     }catch(e){setStatus('● '+(e.message||e),'error');}
   });
 
+  // ADDED: NUMBER MANAGEMENT
+  function renderNumbers(data){
+    const list=$('numberList');
+    list.innerHTML='';
+    const entries=[];
+    if(data && typeof data==='object'){
+      Object.entries(data).forEach(([key,val])=>{
+        if(typeof val==='string') entries.push({key,number:val});
+        else if(val && typeof val==='object' && val.number) entries.push({key,number:String(val.number)});
+      });
+    }
+    if(!entries.length){
+      list.innerHTML='<div class="status">No numbers added yet.</div>';
+      return;
+    }
+    entries.forEach(item=>{
+      const row=document.createElement('div');
+      row.className='number-item';
+      row.innerHTML='<span>📱 '+item.number+'</span><button type="button">DELETE</button>';
+      row.querySelector('button').onclick=()=>{
+        if(!numbersRef)return;
+        numbersRef.child(item.key).remove().then(()=>{
+          $('numberStatus').textContent='✅ Number deleted.';
+          $('numberStatus').className='status ok';
+        }).catch(e=>{
+          $('numberStatus').textContent='Delete failed: '+(e.message||e);
+          $('numberStatus').className='status error';
+        });
+      };
+      list.appendChild(row);
+    });
+  }
+
+  $('numberInput').addEventListener('input',function(){
+    this.value=this.value.replace(/\D/g,'').slice(0,10);
+  });
+
+
+  $('bulkAddBtn').addEventListener('click',function(){
+    const out=$('numberStatus');
+    const raw=$('bulkNumbers').value;
+    const nums=[...new Set(raw.split(/[\s,;]+/).map(x=>x.replace(/\D/g,'')).filter(x=>/^\d{10}$/.test(x)))];
+    if(!nums.length){
+      out.textContent='❌ No valid 10 digit numbers found.';
+      out.className='status error';return;
+    }
+    if(!numbersRef){
+      out.textContent='❌ Firebase is not connected.';
+      out.className='status error';return;
+    }
+    $('bulkAddBtn').disabled=true;
+    const updates={};
+    nums.forEach(n=>{
+      const key=numbersRef.push().key;
+      updates[key]={number:n,used:false,createdAt:Date.now()};
+    });
+    numbersRef.update(updates).then(()=>{
+      $('bulkNumbers').value='';
+      out.textContent='✅ '+nums.length+' number(s) added successfully.';
+      out.className='status ok';
+    }).catch(e=>{
+      out.textContent='Bulk add failed: '+(e.message||e);
+      out.className='status error';
+    }).finally(()=>$('bulkAddBtn').disabled=false);
+  });
+
+  $('addNumberBtn').addEventListener('click',function(){
+    const number=$('numberInput').value.trim();
+    const out=$('numberStatus');
+    if(!/^\d{10}$/.test(number)){
+      out.textContent='❌ Enter a valid 10 digit phone number.';
+      out.className='status error';return;
+    }
+    if(!numbersRef){
+      out.textContent='❌ Firebase is not connected.';
+      out.className='status error';return;
+    }
+    $('addNumberBtn').disabled=true;
+    numbersRef.push({number:number,used:false,createdAt:Date.now()}).then(()=>{
+      $('numberInput').value='';
+      out.textContent='✅ Number added successfully.';
+      out.className='status ok';
+    }).catch(e=>{
+      out.textContent='Add failed: '+(e.message||e);
+      out.className='status error';
+    }).finally(()=>$('addNumberBtn').disabled=false);
+  });
+
   $('sendAnnouncementBtn').addEventListener('click',function(){
     const text=$('announcementText').value.trim();
     const out=$('announcementStatus');
@@ -97,8 +252,16 @@
     if(!window.firebase) throw new Error('Firebase scripts could not load. Check internet connection.');
     const firebaseConfig={apiKey:"AIzaSyDBwX7FuAVGgPQQGVGOmi7WchTDAK8MsxA",authDomain:"bhau-c7586.firebaseapp.com",databaseURL:"https://bhau-c7586-default-rtdb.firebaseio.com",projectId:"bhau-c7586",storageBucket:"bhau-c7586.firebasestorage.app",messagingSenderId:"1097089579562",appId:"1:1097089579562:web:df5de026482a38540fa153"};
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db=firebase.database();settingsRef=db.ref('dashboardSettings');announcementRef=db.ref('announcement');
+    db=firebase.database();
+    settingsRef=db.ref('dashboardSettings');
+    announcementRef=db.ref('announcement');
+    numbersRef=db.ref('dummyNumbers');
+
     settingsRef.on('value',snap=>{state=merge(snap.val());render();setStatus(snap.exists()?'● Connected — live sync active':'● Connected — ready to save first settings','ok');},err=>{console.error(err);setStatus('● Firebase error: '+(err.message||err),'error');});
+    numbersRef.on('value',snap=>renderNumbers(snap.val()),err=>{
+      $('numberStatus').textContent='Number sync failed: '+(err.message||err);
+      $('numberStatus').className='status error';
+    });
   }catch(e){console.error(e);setStatus('● Firebase load failed: '+(e.message||e),'error');}
 })();
 </script>
