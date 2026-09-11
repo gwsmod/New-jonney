@@ -76,31 +76,47 @@
   const $=id=>document.getElementById(id);
   const status=$('status');
   const menuLabels={games:'Games',limbo:'Limbo',deposit:'Deposit',withdraw:'Withdrawal',addcard:'Add Card',autoclaim:'Auto Claim',balance:'Balance',transactions:'Transactions',refer:'Referral',smartcalc:'Smart Calculator'};
-  const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
+  const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),dummyAccount:true,dummyLoginLocked:false,withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
   let state=JSON.parse(JSON.stringify(defaults));
   let db=null, settingsRef=null, announcementRef=null, numbersRef=null;
 
   const DUMMY_CONTROL_KEY='dummyLoginControl';
 
   function loadDummyControl(){
-    try{
-      const raw=JSON.parse(localStorage.getItem(DUMMY_CONTROL_KEY)||'{}');
-      return {visible:raw.visible!==false,locked:raw.locked===true};
-    }catch(e){return {visible:true,locked:false}}
+    return {
+      visible:state.dummyAccount!==false,
+      locked:state.dummyLoginLocked===true
+    };
   }
   function renderDummyControl(){
     const c=loadDummyControl();
     $('dummyLoginVisible').checked=c.visible;
     $('dummyLoginLocked').checked=c.locked;
   }
-  function saveDummyControl(){
+  async function saveDummyControl(){
     const c={visible:$('dummyLoginVisible').checked,locked:$('dummyLoginLocked').checked};
-    localStorage.setItem(DUMMY_CONTROL_KEY,JSON.stringify(c));
+    state.dummyAccount=c.visible;
+    state.dummyLoginLocked=c.locked;
     const out=$('numberStatus');
-    out.textContent=c.locked
-      ? '🔒 Dummy Account Login locked.'
-      : '🔓 Dummy Account Login unlocked.';
-    out.className='status ok';
+    if(!settingsRef){
+      out.textContent='❌ Firebase is not connected.';
+      out.className='status error';
+      return;
+    }
+    const btn=$('saveDummyControlBtn');
+    btn.disabled=true;
+    try{
+      await settingsRef.update({dummyAccount:c.visible,dummyLoginLocked:c.locked});
+      out.textContent=c.visible
+        ? (c.locked ? '🔒 Dummy Account Login locked.' : '🔓 Dummy Account Login unlocked.')
+        : '👁️ Dummy Account Login hidden.';
+      out.className='status ok';
+    }catch(e){
+      out.textContent='❌ Dummy control save failed: '+(e.message||e);
+      out.className='status error';
+    }finally{
+      btn.disabled=false;
+    }
   }
 
   $('saveDummyControlBtn').addEventListener('click',saveDummyControl);
@@ -111,7 +127,15 @@
   for(const [key,label] of Object.entries(menuLabels)) menus.insertAdjacentHTML('beforeend',`<div class="row"><span>${label}</span><label class="switch"><input type="checkbox" data-menu="${key}"><span class="slider"></span></label></div>`);
 
   function setStatus(text,type=''){status.textContent=text;status.className='status '+type;}
-  function merge(raw){const d=raw&&typeof raw==='object'?raw:{};return {menus:{...defaults.menus,...(d.menus||{})},withdrawal:{...defaults.withdrawal,...(d.withdrawal||{})}}}
+  function merge(raw){
+    const d=raw&&typeof raw==='object'?raw:{};
+    return {
+      menus:{...defaults.menus,...(d.menus||{})},
+      dummyAccount:d.dummyAccount!==false,
+      dummyLoginLocked:d.dummyLoginLocked===true,
+      withdrawal:{...defaults.withdrawal,...(d.withdrawal||{})}
+    };
+  }
   function render(){
     document.querySelectorAll('[data-menu]').forEach(el=>el.checked=state.menus[el.dataset.menu]!==false);
     document.querySelectorAll('.mode').forEach(el=>el.classList.toggle('active',el.dataset.mode===state.withdrawal.mode));
@@ -127,7 +151,12 @@
     const min=Number($('minimum').value),max=Number($('maximum').value);
     if(!Number.isFinite(min)||!Number.isFinite(max)||min<1||max<min) throw new Error('Minimum/maximum values are invalid.');
     const menuState={};document.querySelectorAll('[data-menu]').forEach(el=>menuState[el.dataset.menu]=el.checked);
-    return {menus:menuState,withdrawal:{mode:state.withdrawal.mode,fixedAmounts:unique.length?unique:defaults.withdrawal.fixedAmounts,minimum:min,maximum:max}};
+    return {
+      menus:menuState,
+      dummyAccount:$('dummyLoginVisible').checked,
+      dummyLoginLocked:$('dummyLoginLocked').checked,
+      withdrawal:{mode:state.withdrawal.mode,fixedAmounts:unique.length?unique:defaults.withdrawal.fixedAmounts,minimum:min,maximum:max}
+    };
   }
 
   document.querySelectorAll('.mode').forEach(el=>el.addEventListener('click',function(){state.withdrawal.mode=this.dataset.mode;render();}));
@@ -194,8 +223,7 @@
     $('bulkAddBtn').disabled=true;
     const updates={};
     nums.forEach(n=>{
-      const key=numbersRef.push().key;
-      updates[key]={number:n,used:false,createdAt:Date.now()};
+      updates[n]={number:n,used:false,createdAt:Date.now()};
     });
     numbersRef.update(updates).then(()=>{
       $('bulkNumbers').value='';
@@ -219,7 +247,7 @@
       out.className='status error';return;
     }
     $('addNumberBtn').disabled=true;
-    numbersRef.push({number:number,used:false,createdAt:Date.now()}).then(()=>{
+    numbersRef.child(number).set({number:number,used:false,createdAt:Date.now()}).then(()=>{
       $('numberInput').value='';
       out.textContent='✅ Number added successfully.';
       out.className='status ok';
@@ -248,6 +276,7 @@
   });
 
   render();
+  renderDummyControl();
   try{
     if(!window.firebase) throw new Error('Firebase scripts could not load. Check internet connection.');
     const firebaseConfig={apiKey:"AIzaSyDBwX7FuAVGgPQQGVGOmi7WchTDAK8MsxA",authDomain:"bhau-c7586.firebaseapp.com",databaseURL:"https://bhau-c7586-default-rtdb.firebaseio.com",projectId:"bhau-c7586",storageBucket:"bhau-c7586.firebasestorage.app",messagingSenderId:"1097089579562",appId:"1:1097089579562:web:df5de026482a38540fa153"};
@@ -257,7 +286,7 @@
     announcementRef=db.ref('announcement');
     numbersRef=db.ref('dummyNumbers');
 
-    settingsRef.on('value',snap=>{state=merge(snap.val());render();setStatus(snap.exists()?'● Connected — live sync active':'● Connected — ready to save first settings','ok');},err=>{console.error(err);setStatus('● Firebase error: '+(err.message||err),'error');});
+    settingsRef.on('value',snap=>{state=merge(snap.val());render();renderDummyControl();setStatus(snap.exists()?'● Connected — live sync active':'● Connected — ready to save first settings','ok');},err=>{console.error(err);setStatus('● Firebase error: '+(err.message||err),'error');});
     numbersRef.on('value',snap=>renderNumbers(snap.val()),err=>{
       $('numberStatus').textContent='Number sync failed: '+(err.message||err);
       $('numberStatus').className='status error';
