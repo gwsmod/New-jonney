@@ -5,21 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BHAU Admin Panel</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#080b12;color:#eef2ff}.wrap{max-width:760px;margin:auto;padding:20px}.head{padding:20px;border-radius:22px;background:linear-gradient(135deg,#17102b,#0d1626);border:1px solid #302354;margin-bottom:16px}.card{background:#101725;border:1px solid #273149;border-radius:20px;padding:18px;margin:14px 0}h1,h2{margin:0 0 10px}h2{font-size:17px}.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #20293a;gap:12px}.row:last-child{border:0}.switch{width:52px;height:30px;position:relative;display:inline-block;flex:0 0 52px}.switch input{position:absolute;opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#3b4252;border-radius:99px;cursor:pointer;touch-action:manipulation}.slider:before{content:'';position:absolute;width:22px;height:22px;left:4px;top:4px;background:white;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:#16a34a}.switch input:checked+.slider:before{transform:translateX(22px)}.modes{display:flex;gap:10px}.mode{flex:1;padding:14px;border:1px solid #34405a;border-radius:14px;cursor:pointer;text-align:center;user-select:none;touch-action:manipulation}.mode.active{border-color:#7c3aed;background:#241341}input[type=number],input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;margin-top:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{width:100%;padding:15px;border:0;border-radius:14px;background:#7c3aed;color:#fff;font-weight:800;font-size:15px;cursor:pointer;touch-action:manipulation}.btn:disabled{opacity:.55}.btn.secondary{background:#263146}.status{font-size:13px;color:#94a3b8;margin-top:10px;word-break:break-word}.status.ok{color:#34d399}.status.error{color:#fb7185}.hidden{display:none}.login-game-card{position:relative;overflow:hidden}
-.login-game-card:before{content:'';position:absolute;inset:-60px;background:radial-gradient(circle at 20% 20%,rgba(124,58,237,.16),transparent 42%),radial-gradient(circle at 80% 80%,rgba(37,99,235,.12),transparent 42%);pointer-events:none}
-.login-game-content{position:relative}
-.game-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.game-option{position:relative;padding:18px 12px;border:1px solid #34405a;border-radius:16px;background:#080d17;cursor:pointer;text-align:center;transition:.2s;touch-action:manipulation}
-.game-option:hover{border-color:#6d5aa8;transform:translateY(-1px)}
-.game-option.active{border-color:#7c3aed;background:linear-gradient(145deg,#241341,#11182a);box-shadow:0 0 0 1px rgba(124,58,237,.18),0 10px 30px rgba(124,58,237,.12)}
-.game-option .game-icon{font-size:28px;display:block;margin-bottom:6px}
-.game-option .game-name{font-size:16px;font-weight:900}
-.game-option .game-desc{font-size:11px;color:#94a3b8;margin-top:4px}
-.game-option .check{position:absolute;right:9px;top:8px;font-size:13px;opacity:0}
-.game-option.active .check{opacity:1;color:#34d399}
-.selected-game{margin-top:12px;padding:10px 12px;border-radius:12px;background:#0d1724;border:1px solid #273149;color:#94a3b8;font-size:12px}
-.selected-game b{color:#f1f5f9}
-@media(max-width:500px){.grid{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#080b12;color:#eef2ff}.wrap{max-width:760px;margin:auto;padding:20px}.head{padding:20px;border-radius:22px;background:linear-gradient(135deg,#17102b,#0d1626);border:1px solid #302354;margin-bottom:16px}.card{background:#101725;border:1px solid #273149;border-radius:20px;padding:18px;margin:14px 0}h1,h2{margin:0 0 10px}h2{font-size:17px}.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #20293a;gap:12px}.row:last-child{border:0}.switch{width:52px;height:30px;position:relative;display:inline-block;flex:0 0 52px}.switch input{position:absolute;opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#3b4252;border-radius:99px;cursor:pointer;touch-action:manipulation}.slider:before{content:'';position:absolute;width:22px;height:22px;left:4px;top:4px;background:white;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:#16a34a}.switch input:checked+.slider:before{transform:translateX(22px)}.modes{display:flex;gap:10px}.mode{flex:1;padding:14px;border:1px solid #34405a;border-radius:14px;cursor:pointer;text-align:center;user-select:none;touch-action:manipulation}.mode.active{border-color:#7c3aed;background:#241341}input[type=number],input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;margin-top:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{width:100%;padding:15px;border:0;border-radius:14px;background:#7c3aed;color:#fff;font-weight:800;font-size:15px;cursor:pointer;touch-action:manipulation}.btn:disabled{opacity:.55}.btn.secondary{background:#263146}.status{font-size:13px;color:#94a3b8;margin-top:10px;word-break:break-word}.status.ok{color:#34d399}.status.error{color:#fb7185}.hidden{display:none}@media(max-width:500px){.grid{grid-template-columns:1fr}}
 .bulk{margin-top:12px;padding-top:12px;border-top:1px solid #20293a}
 .bulk textarea{width:100%;min-height:130px;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;resize:vertical}
 .small-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
@@ -33,28 +19,6 @@
 <div class="wrap">
   <div class="head"><h1>⚙️ BHAU Admin Panel</h1><div>Firebase live settings control</div><div id="status" class="status">Loading control panel…</div></div>
   <div class="card"><h2>📋 Menu Control</h2><div id="menus"></div></div>
-  <div class="card login-game-card">
-    <div class="login-game-content">
-      <h2>🎮 Login Game</h2>
-      <div class="status">Select which game users should log into.</div>
-      <div class="game-options">
-        <div class="game-option" data-login-game="BHAU">
-          <span class="check">✓</span>
-          <span class="game-icon">🔵</span>
-          <div class="game-name">BHAU</div>
-          <div class="game-desc">Users will use BHAU login</div>
-        </div>
-        <div class="game-option" data-login-game="ANNA">
-          <span class="check">✓</span>
-          <span class="game-icon">🟣</span>
-          <div class="game-name">ANNA</div>
-          <div class="game-desc">Users will use ANNA login</div>
-        </div>
-      </div>
-      <div id="selectedGameStatus" class="selected-game">Selected game: <b>BHAU</b></div>
-    </div>
-  </div>
-
   <div class="card"><h2>💸 Withdrawal Settings</h2>
     <div class="modes"><div class="mode" data-mode="fixed">Fixed Amount</div><div class="mode" data-mode="any">Any Amount</div></div>
     <div id="fixedBox"><label>Allowed amounts (comma separated)</label><input id="fixedAmounts" type="text" value="200,300,500,1000,2000,5000"></div>
@@ -112,7 +76,7 @@
   const $=id=>document.getElementById(id);
   const status=$('status');
   const menuLabels={games:'Games',limbo:'Limbo',deposit:'Deposit',withdraw:'Withdrawal',addcard:'Add Card',autoclaim:'Auto Claim',balance:'Balance',transactions:'Transactions',refer:'Referral',smartcalc:'Smart Calculator'};
-  const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),loginGame:'BHAU',dummyAccount:true,dummyLoginLocked:false,withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
+  const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),dummyAccount:true,dummyLoginLocked:false,withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
   let state=JSON.parse(JSON.stringify(defaults));
   let db=null, settingsRef=null, announcementRef=null, numbersRef=null;
 
@@ -167,17 +131,12 @@
     const d=raw&&typeof raw==='object'?raw:{};
     return {
       menus:{...defaults.menus,...(d.menus||{})},
-      loginGame:d.loginGame==='ANNA'?'ANNA':'BHAU',
       dummyAccount:d.dummyAccount!==false,
       dummyLoginLocked:d.dummyLoginLocked===true,
       withdrawal:{...defaults.withdrawal,...(d.withdrawal||{})}
     };
   }
   function render(){
-    document.querySelectorAll('[data-login-game]').forEach(el=>{
-      el.classList.toggle('active',el.dataset.loginGame===state.loginGame);
-    });
-    $('selectedGameStatus').innerHTML='Selected game: <b>'+state.loginGame+'</b>';
     document.querySelectorAll('[data-menu]').forEach(el=>el.checked=state.menus[el.dataset.menu]!==false);
     document.querySelectorAll('.mode').forEach(el=>el.classList.toggle('active',el.dataset.mode===state.withdrawal.mode));
     $('fixedAmounts').value=(Array.isArray(state.withdrawal.fixedAmounts)?state.withdrawal.fixedAmounts:defaults.withdrawal.fixedAmounts).join(',');
@@ -194,7 +153,6 @@
     const menuState={};document.querySelectorAll('[data-menu]').forEach(el=>menuState[el.dataset.menu]=el.checked);
     return {
       menus:menuState,
-      loginGame:state.loginGame==='ANNA'?'ANNA':'BHAU',
       dummyAccount:$('dummyLoginVisible').checked,
       dummyLoginLocked:$('dummyLoginLocked').checked,
       withdrawal:{mode:state.withdrawal.mode,fixedAmounts:unique.length?unique:defaults.withdrawal.fixedAmounts,minimum:min,maximum:max}
@@ -202,18 +160,6 @@
   }
 
   document.querySelectorAll('.mode').forEach(el=>el.addEventListener('click',function(){state.withdrawal.mode=this.dataset.mode;render();}));
-
-  document.querySelectorAll('[data-login-game]').forEach(el=>el.addEventListener('click',function(){
-    state.loginGame=this.dataset.loginGame==='ANNA'?'ANNA':'BHAU';
-    render();
-    if(settingsRef){
-      settingsRef.update({loginGame:state.loginGame}).then(()=>{
-        setStatus('● Login game set to '+state.loginGame,'ok');
-      }).catch(e=>setStatus('● Login game save failed: '+(e.message||e),'error'));
-    }else{
-      setStatus('Login game changed locally. Firebase is not connected yet.','error');
-    }
-  }));
 
   $('saveBtn').addEventListener('click',function(){
     try{
