@@ -80,6 +80,71 @@
   const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),dummyAccount:true,dummyLoginLocked:false,withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
   let state=JSON.parse(JSON.stringify(defaults));
   let db=null, settingsRef=null, announcementRef=null, numbersRef=null;
+  const SUPABASE_URL='https://xsfeqxfnhvkwiigztcvy.supabase.co';
+  const SUPABASE_KEY='sb_publishable_RAjkzu6ewKchta5oKA0F9g_vVa5q1yV';
+  const SUPABASE_TABLE=SUPABASE_URL+'/rest/v1/dummy_accounts';
+
+  async function supabaseDummyRequest(path='', options={}){
+    const headers={
+      apikey:SUPABASE_KEY,
+      Authorization:'Bearer '+SUPABASE_KEY,
+      'Content-Type':'application/json',
+      ...(options.headers||{})
+    };
+    const r=await fetch(SUPABASE_TABLE+path,{...options,headers});
+    const text=await r.text();
+    let data=null;
+    try{data=text?JSON.parse(text):null;}catch(_){}
+    if(!r.ok){
+      const msg=(data&&((data.message)||(data.error_description)||(data.hint)||(data.details)))||text||('HTTP '+r.status);
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  async function loadSupabaseDummyAccounts(){
+    const data=await supabaseDummyRequest('?select=id,phone,used,created_at,used_at&order=id.asc');
+    renderNumbersFromSupabase(Array.isArray(data)?data:[]);
+  }
+
+  function renderNumbersFromSupabase(data){
+    const list=$('numberList');
+    list.innerHTML='';
+    if(!data.length){list.innerHTML='<div class="status">No accounts added yet.</div>';return;}
+    data.forEach(item=>{
+      const row=document.createElement('div');
+      row.className='number-item';
+      const used=item.used===true;
+      row.innerHTML='<span>📱 '+String(item.phone||'')+(used?' <small style="color:#fb7185">USED</small>':' <small style="color:#34d399">READY</small>')+'</span><div style="display:flex;gap:6px"><button type="button" class="resetBtn" style="background:#16a34a">RESET</button><button type="button">DELETE</button></div>';
+      row.querySelector('.resetBtn').onclick=async()=>{
+        try{
+          await supabaseDummyRequest('?id=eq.'+encodeURIComponent(item.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({used:false,used_at:null})});
+          $('numberStatus').textContent='✅ Account reset and ready.';$('numberStatus').className='status ok';
+          await loadSupabaseDummyAccounts();
+        }catch(e){$('numberStatus').textContent='❌ Reset failed: '+e.message;$('numberStatus').className='status error';}
+      };
+      row.querySelector('button:not(.resetBtn)').onclick=async()=>{
+        try{
+          await supabaseDummyRequest('?id=eq.'+encodeURIComponent(item.id),{method:'DELETE',headers:{Prefer:'return=minimal'}});
+          $('numberStatus').textContent='✅ Account deleted.';$('numberStatus').className='status ok';
+          await loadSupabaseDummyAccounts();
+        }catch(e){$('numberStatus').textContent='❌ Delete failed: '+e.message;$('numberStatus').className='status error';}
+      };
+      list.appendChild(row);
+    });
+  }
+
+  async function addSupabaseDummy(phone){
+    // The current table has a NOT NULL password column. We do NOT use/store a
+    // real password for dummy accounts; an empty string is only a schema-safe
+    // placeholder until the column is made nullable.
+    const data=await supabaseDummyRequest('',{
+      method:'POST',
+      headers:{Prefer:'return=representation'},
+      body:JSON.stringify({phone:String(phone),password:'',used:false,used_at:null})
+    });
+    return Array.isArray(data)?data[0]:data;
+  }
 
   const DUMMY_CONTROL_KEY='dummyLoginControl';
 
@@ -171,101 +236,57 @@
     }catch(e){setStatus('● '+(e.message||e),'error');}
   });
 
-  // ADDED: NUMBER MANAGEMENT
-  function renderNumbers(data){
-    const list=$('numberList');
-    list.innerHTML='';
-    const entries=[];
-    if(data && typeof data==='object'){
-      Object.entries(data).forEach(([key,val])=>{
-        if(typeof val==='string') entries.push({key,number:val});
-        else if(val && typeof val==='object' && val.number) entries.push({key,number:String(val.number)});
-      });
-    }
-    if(!entries.length){
-      list.innerHTML='<div class="status">No numbers added yet.</div>';
-      return;
-    }
-    entries.forEach(item=>{
-      const row=document.createElement('div');
-      row.className='number-item';
-      row.innerHTML='<span>📱 '+item.number+(item.used ? ' <small style="color:#fb7185">USED</small>' : ' <small style="color:#34d399">READY</small>')+'</span><div style="display:flex;gap:6px"><button type="button" class="resetBtn" style="background:#16a34a">RESET</button><button type="button">DELETE</button></div>';
-      row.querySelector('.resetBtn').onclick=()=>{
-        if(!numbersRef)return;
-        numbersRef.child(item.key).update({number:item.number,used:false,createdAt:Date.now(),claimedAt:null}).then(()=>{
-          $('numberStatus').textContent='✅ Account reset and ready.';
-          $('numberStatus').className='status ok';
-        }).catch(e=>{
-          $('numberStatus').textContent='Reset failed: '+(e.message||e);
-          $('numberStatus').className='status error';
-        });
-      };
-      row.querySelector('button:not(.resetBtn)').onclick=()=>{
-        if(!numbersRef)return;
-        numbersRef.child(item.key).remove().then(()=>{
-          $('numberStatus').textContent='✅ Account deleted.';
-          $('numberStatus').className='status ok';
-        }).catch(e=>{
-          $('numberStatus').textContent='Delete failed: '+(e.message||e);
-          $('numberStatus').className='status error';
-        });
-      };
-      list.appendChild(row);
-    });
-  }
-
+  // SUPABASE DUMMY ACCOUNT MANAGEMENT
   $('numberInput').addEventListener('input',function(){
     this.value=this.value.replace(/\D/g,'').slice(0,10);
   });
 
-
-  $('bulkAddBtn').addEventListener('click',function(){
-    const out=$('numberStatus');
-    const raw=$('bulkNumbers').value;
-    const nums=[...new Set(raw.split(/[\s,;]+/).map(x=>x.replace(/\D/g,'')).filter(x=>/^\d{10}$/.test(x)))];
-    if(!nums.length){
-      out.textContent='❌ No valid 10 digit numbers found.';
-      out.className='status error';return;
-    }
-    if(!numbersRef){
-      out.textContent='❌ Firebase is not connected.';
-      out.className='status error';return;
-    }
-    $('bulkAddBtn').disabled=true;
-    const updates={};
-    nums.forEach(n=>{
-      updates[n]={number:n,used:false,createdAt:Date.now()};
-    });
-    numbersRef.update(updates).then(()=>{
-      $('bulkNumbers').value='';
-      out.textContent='✅ '+nums.length+' number(s) added successfully.';
-      out.className='status ok';
-    }).catch(e=>{
-      out.textContent='Bulk add failed: '+(e.message||e);
-      out.className='status error';
-    }).finally(()=>$('bulkAddBtn').disabled=false);
-  });
-
-  $('addNumberBtn').addEventListener('click',function(){
+  $('addNumberBtn').addEventListener('click',async function(){
     const number=$('numberInput').value.trim();
     const out=$('numberStatus');
     if(!/^\d{10}$/.test(number)){
       out.textContent='❌ Enter a valid 10 digit phone number.';
       out.className='status error';return;
     }
-    if(!numbersRef){
-      out.textContent='❌ Firebase is not connected.';
-      out.className='status error';return;
-    }
-    $('addNumberBtn').disabled=true;
-    numbersRef.child(number).set({number:number,used:false,createdAt:Date.now()}).then(()=>{
+    this.disabled=true;
+    try{
+      await addSupabaseDummy(number);
       $('numberInput').value='';
-      out.textContent='✅ Number added successfully.';
+      out.textContent='✅ Account saved to Supabase database.';
       out.className='status ok';
-    }).catch(e=>{
-      out.textContent='Add failed: '+(e.message||e);
+      await loadSupabaseDummyAccounts();
+    }catch(e){
+      console.error(e);
+      out.textContent='❌ Database save failed: '+(e.message||e)+' — check Supabase RLS INSERT policy.';
       out.className='status error';
-    }).finally(()=>$('addNumberBtn').disabled=false);
+    }finally{this.disabled=false;}
+  });
+
+  $('bulkAddBtn').addEventListener('click',async function(){
+    const raw=$('bulkNumbers').value.trim();
+    const out=$('numberStatus');
+    const nums=[...new Set(raw.split(/[\n,\s]+/).map(x=>x.replace(/\D/g,'')).filter(Boolean))];
+    const valid=nums.filter(n=>/^\d{10}$/.test(n));
+    if(!valid.length){out.textContent='❌ Enter one or more valid 10 digit numbers.';out.className='status error';return;}
+    this.disabled=true;
+    let saved=0, failed=0;
+    try{
+      for(const n of valid){
+        try{await addSupabaseDummy(n);saved++;}catch(e){failed++;console.error('Bulk save failed for',n,e);}
+      }
+      $('bulkNumbers').value='';
+      if(failed===0){
+        out.textContent='✅ '+saved+' dummy account(s) saved to Supabase.';
+        out.className='status ok';
+      }else{
+        out.textContent='⚠️ Saved '+saved+', failed '+failed+'. Check Supabase RLS / duplicate rows.';
+        out.className='status error';
+      }
+      await loadSupabaseDummyAccounts();
+    }catch(e){
+      out.textContent='❌ Bulk database save failed: '+e.message;
+      out.className='status error';
+    }finally{this.disabled=false;}
   });
 
   $('sendAnnouncementBtn').addEventListener('click',function(){
@@ -295,11 +316,11 @@
     db=firebase.database();
     settingsRef=db.ref('dashboardSettings');
     announcementRef=db.ref('announcement');
-    numbersRef=db.ref('dummyNumbers');
 
     settingsRef.on('value',snap=>{state=merge(snap.val());render();renderDummyControl();setStatus(snap.exists()?'● Connected — live sync active':'● Connected — ready to save first settings','ok');},err=>{console.error(err);setStatus('● Firebase error: '+(err.message||err),'error');});
-    numbersRef.on('value',snap=>renderNumbers(snap.val()),err=>{
-      $('numberStatus').textContent='Number sync failed: '+(err.message||err);
+    loadSupabaseDummyAccounts().catch(e=>{
+      console.error(e);
+      $('numberStatus').textContent='❌ Supabase account load failed: '+(e.message||e)+' — check table/RLS.';
       $('numberStatus').className='status error';
     });
   }catch(e){console.error(e);setStatus('● Firebase load failed: '+(e.message||e),'error');}
