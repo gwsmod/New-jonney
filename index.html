@@ -1,3 +1,4 @@
+```
 <!doctype html>
 <html lang="en">
 <head>
@@ -27,17 +28,17 @@
 
   <!-- ADDED: NUMBER MANAGEMENT -->
   <div class="card">
-    <h2>📱 Dummy Account Numbers</h2>
-    <label>Add phone number</label>
+    <h2>📱 Dummy Account Queue</h2>
+    <label>Add dummy account number</label>
     <input id="numberInput" type="text" inputmode="numeric" maxlength="10" placeholder="Enter 10 digit number">
-    <button id="addNumberBtn" class="btn" type="button" style="margin-top:10px">➕ ADD NUMBER</button>
+    <button id="addNumberBtn" class="btn" type="button" style="margin-top:10px">➕ ADD ACCOUNT</button>
 
     <div class="bulk">
-      <label>Bulk add numbers (one per line or comma separated)</label>
+      <label>Bulk add dummy account numbers (one per line or comma separated)</label>
       <textarea id="bulkNumbers" placeholder="9876543210
 9123456789
 9012345678"></textarea>
-      <button id="bulkAddBtn" class="btn" type="button" style="margin-top:10px">📥 BULK ADD NUMBERS</button>
+      <button id="bulkAddBtn" class="btn" type="button" style="margin-top:10px">📥 BULK ADD ACCOUNTS</button>
     </div>
 
     <div id="numberStatus" class="status"></div>
@@ -188,11 +189,21 @@
     entries.forEach(item=>{
       const row=document.createElement('div');
       row.className='number-item';
-      row.innerHTML='<span>📱 '+item.number+'</span><button type="button">DELETE</button>';
-      row.querySelector('button').onclick=()=>{
+      row.innerHTML='<span>📱 '+item.number+(item.used ? ' <small style="color:#fb7185">USED</small>' : ' <small style="color:#34d399">READY</small>')+'</span><div style="display:flex;gap:6px"><button type="button" class="resetBtn" style="background:#16a34a">RESET</button><button type="button">DELETE</button></div>';
+      row.querySelector('.resetBtn').onclick=()=>{
+        if(!numbersRef)return;
+        numbersRef.child(item.key).update({number:item.number,used:false,createdAt:Date.now(),claimedAt:null}).then(()=>{
+          $('numberStatus').textContent='✅ Account reset and ready.';
+          $('numberStatus').className='status ok';
+        }).catch(e=>{
+          $('numberStatus').textContent='Reset failed: '+(e.message||e);
+          $('numberStatus').className='status error';
+        });
+      };
+      row.querySelector('button:not(.resetBtn)').onclick=()=>{
         if(!numbersRef)return;
         numbersRef.child(item.key).remove().then(()=>{
-          $('numberStatus').textContent='✅ Number deleted.';
+          $('numberStatus').textContent='✅ Account deleted.';
           $('numberStatus').className='status ok';
         }).catch(e=>{
           $('numberStatus').textContent='Delete failed: '+(e.message||e);
@@ -296,3 +307,4 @@
 </script>
 </body>
 </html>
+```
