@@ -1,4 +1,3 @@
-```
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,6 +10,7 @@
 .bulk textarea{width:100%;min-height:130px;padding:12px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:white;resize:vertical}
 .small-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .btn.red{background:#ef4444}.btn.green{background:#16a34a}
+select.api-mode-select{width:100%;padding:13px;border-radius:12px;border:1px solid #34405a;background:#080d17;color:#fff;font-size:15px;font-weight:700}
 .number-list{margin-top:12px;display:flex;flex-direction:column;gap:7px;max-height:260px;overflow:auto}
 .number-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid #273149;border-radius:12px;background:#080d17;font-size:13px}
 .number-item button{border:0;border-radius:9px;background:#ef4444;color:#fff;padding:7px 10px;font-weight:800;cursor:pointer}
@@ -19,6 +19,17 @@
 <body>
 <div class="wrap">
   <div class="head"><h1>⚙️ BHAU Admin Panel</h1><div>Firebase live settings control</div><div id="status" class="status">Loading control panel…</div></div>
+  <div class="card">
+    <h2>🎯 User Panel Lottery Control</h2>
+    <div class="status">Select which login page users should see. This controls the user-panel branding and JWT visibility. Existing Supabase APIs are not changed.</div>
+    <label for="apiMode" style="display:block;margin-top:12px">Active Lottery</label>
+    <select id="apiMode" class="api-mode-select">
+      <option value="anna">🟣 ANNA LOTTERY</option>
+      <option value="indus">🔵 INDUS LOTTERY</option>
+    </select>
+    <div id="apiModeStatus" class="status"></div>
+  </div>
+
   <div class="card"><h2>📋 Menu Control</h2><div id="menus"></div></div>
   <div class="card"><h2>💸 Withdrawal Settings</h2>
     <div class="modes"><div class="mode" data-mode="fixed">Fixed Amount</div><div class="mode" data-mode="any">Any Amount</div></div>
@@ -77,7 +88,7 @@
   const $=id=>document.getElementById(id);
   const status=$('status');
   const menuLabels={games:'Games',limbo:'Limbo',deposit:'Deposit',withdraw:'Withdrawal',addcard:'Add Card',autoclaim:'Auto Claim',balance:'Balance',transactions:'Transactions',refer:'Referral',smartcalc:'Smart Calculator'};
-  const defaults={menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),dummyAccount:true,dummyLoginLocked:false,withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
+  const defaults={apiMode:'anna',menus:Object.fromEntries(Object.keys(menuLabels).map(k=>[k,true])),dummyAccount:true,dummyLoginLocked:false,withdrawal:{mode:'fixed',fixedAmounts:[200,300,500,1000,2000,5000],minimum:1,maximum:999999}};
   let state=JSON.parse(JSON.stringify(defaults));
   let db=null, settingsRef=null, announcementRef=null, numbersRef=null;
   const SUPABASE_URL='https://xsfeqxfnhvkwiigztcvy.supabase.co';
@@ -196,6 +207,7 @@
   function merge(raw){
     const d=raw&&typeof raw==='object'?raw:{};
     return {
+      apiMode:d.apiMode==='indus'?'indus':'anna',
       menus:{...defaults.menus,...(d.menus||{})},
       dummyAccount:d.dummyAccount!==false,
       dummyLoginLocked:d.dummyLoginLocked===true,
@@ -203,6 +215,9 @@
     };
   }
   function render(){
+    $('apiMode').value=state.apiMode==='indus'?'indus':'anna';
+    $('apiModeStatus').textContent='Current user login page: '+(state.apiMode==='indus'?'INDUS LOTTERY':'ANNA LOTTERY');
+    $('apiModeStatus').className='status ok';
     document.querySelectorAll('[data-menu]').forEach(el=>el.checked=state.menus[el.dataset.menu]!==false);
     document.querySelectorAll('.mode').forEach(el=>el.classList.toggle('active',el.dataset.mode===state.withdrawal.mode));
     $('fixedAmounts').value=(Array.isArray(state.withdrawal.fixedAmounts)?state.withdrawal.fixedAmounts:defaults.withdrawal.fixedAmounts).join(',');
@@ -218,6 +233,7 @@
     if(!Number.isFinite(min)||!Number.isFinite(max)||min<1||max<min) throw new Error('Minimum/maximum values are invalid.');
     const menuState={};document.querySelectorAll('[data-menu]').forEach(el=>menuState[el.dataset.menu]=el.checked);
     return {
+      apiMode:$('apiMode').value==='indus'?'indus':'anna',
       menus:menuState,
       dummyAccount:$('dummyLoginVisible').checked,
       dummyLoginLocked:$('dummyLoginLocked').checked,
@@ -226,6 +242,12 @@
   }
 
   document.querySelectorAll('.mode').forEach(el=>el.addEventListener('click',function(){state.withdrawal.mode=this.dataset.mode;render();}));
+
+  $('apiMode').addEventListener('change',function(){
+    state.apiMode=this.value==='indus'?'indus':'anna';
+    $('apiModeStatus').textContent='Selected: '+(state.apiMode==='indus'?'INDUS LOTTERY':'ANNA LOTTERY')+' — click SAVE SETTINGS to publish.';
+    $('apiModeStatus').className='status';
+  });
 
   $('saveBtn').addEventListener('click',function(){
     try{
@@ -328,4 +350,3 @@
 </script>
 </body>
 </html>
-```
